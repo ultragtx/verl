@@ -32,16 +32,28 @@ def get_device_flops(unit="T"):
 
     device_name = torch.cuda.get_device_name()
     flops = float("inf")  # INF flops for unkown gpu type
-    if "H100" in device_name or "H800" in device_name:
+    if "H100" in device_name or "H800" in device_name or "H200" in device_name:
         flops = 989e12
+    elif "H20" in device_name:
+        flops = 148e12
     elif "A100" in device_name or "A800" in device_name:
         flops = 312e12
     elif "L40" in device_name:
         flops = 181.05e12
     elif "L20" in device_name:
         flops = 119.5e12
-    elif "H20" in device_name:
-        flops = 148e12
+    elif "L4" in device_name:
+        flops = 121e12
+    elif "6000 Ada" in device_name:
+        flops = 182.1e12
+    elif "4090" in device_name:
+        flops = 165.2e12
+    elif "A6000" in device_name:
+        flops = 77.4e12
+    elif "A40" in device_name:
+        flops = 74.8e12
+    elif "3090" in device_name:
+        flops = 71e12
     elif "910B" in device_name:
         flops = 354e12
     flops_unit = unit_convert(flops, unit)
