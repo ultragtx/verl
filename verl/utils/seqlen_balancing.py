@@ -253,6 +253,8 @@ def rearrange_micro_batches(batch: TensorDict, max_token_len, dp_group=None):
 
         micro_batches.append(curr_micro_batch)
 
+    print(f">>>>>>max_token_len: {max_token_len}, num_micro_batches: {num_micro_batches}, mini_batch_len: {len(batch)} total_seqlen: {total_seqlen}, min_seq_len_effective: {min(seq_len_effective)}")
+
     return micro_batches, micro_bsz_idx
 
 

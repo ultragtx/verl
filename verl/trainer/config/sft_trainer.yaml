@@ -42,4 +42,7 @@ trainer:
   total_training_steps: null
   logger: ['console']
   seed: 1
+  save_freq: -1
+  test_freq: -1
+
 

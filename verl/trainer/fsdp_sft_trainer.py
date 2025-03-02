@@ -477,35 +477,39 @@ class FSDPSFTTrainer(object):
                 # for early exit validation
                 if global_step >= self.total_training_steps:
                     # Perform final validation
-                    val_losses = []
-                    for val_data in self.val_dataloader:
-                        val_data = TensorDict(val_data, batch_size=self.config.data.micro_batch_size_per_gpu).cuda()
-                        val_loss = self.validation_step(val_data)
-                        val_losses.append(val_loss)
-                    if rank == 0:
-                        avg_val_loss = torch.mean(torch.stack(val_losses))
-                        metric = {'val/loss': avg_val_loss.detach().item()}
-                        tracking.log(data=metric, step=global_step)
-                    torch.distributed.barrier()
-
+                    self.validate(rank, global_step, tracking)
                     # Save final checkpoint
                     self.save_checkpoint(step=global_step)
                     return
 
-            # validation
-            val_losses = []
-            for data in self.val_dataloader:
-                data = TensorDict(data, batch_size=self.config.data.micro_batch_size_per_gpu).cuda()
-                val_loss = self.validation_step(data)
-                val_losses.append(val_loss)
-            if rank == 0:
-                val_loss = torch.mean(torch.stack(val_losses))
-                metric = {'val/loss': val_loss.detach().item()}
-                tracking.log(data=metric, step=global_step)
-            torch.distributed.barrier()
+                # if self.config.trainer.test_freq > 0 and \
+                #         global_step % self.config.trainer.test_freq == 0:
+                #     self.validate(rank, global_step, tracking)
 
+                # if self.config.trainer.save_freq > 0 and \
+                #         global_step % self.config.trainer.save_freq == 0:
+                #     self.save_checkpoint(step=global_step)
+
+            # validation
+            self.validate(rank, global_step, tracking)
             # save checkpoint
             self.save_checkpoint(step=global_step)
+
+    def validate(self, rank, global_step, tracking):
+        val_losses = []
+        for data in self.val_dataloader:
+            data = TensorDict(data, batch_size=self.config.data.micro_batch_size_per_gpu).cuda()
+            val_loss = self.validation_step(data)
+            val_losses.append(val_loss)
+        
+        if rank == 0:
+            avg_val_loss = torch.mean(torch.stack(val_losses))
+            metric = {'val/loss': avg_val_loss.detach().item()}
+            tracking.log(data=metric, step=global_step)
+        
+        torch.distributed.barrier()
+
+
 
 
 from verl.trainer.fsdp_sft_trainer import FSDPSFTTrainer
